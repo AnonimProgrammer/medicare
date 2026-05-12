@@ -1,54 +1,42 @@
 package com.ironhack.infra.adapter.mapper;
 
+import java.util.UUID;
+
 import com.ironhack.application.dto.AppointmentDTO;
 import com.ironhack.application.dto.request.CreateAppointmentRequest;
 import com.ironhack.domain.AppointmentEntity;
 import com.ironhack.domain.DoctorEntity;
 import com.ironhack.domain.PatientEntity;
-import com.ironhack.infra.adapter.mapper.config.MapStructMapperConfig;
+import com.ironhack.infra.config.MapStructConfig;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 
-@Mapper(config = MapStructMapperConfig.class, uses = {DoctorMapper.class})
+@Mapper(
+        config = MapStructConfig.class,
+        uses = {DoctorMapper.class, PatientMapper.class})
 public interface AppointmentMapper {
 
-    @Mapping(source = "patient.id", target = "patientId")
-    @Mapping(source = "doctor.id", target = "doctorId")
     AppointmentDTO toAppointmentDTO(AppointmentEntity appointmentEntity);
 
-    @Mapping(source = "patientId", target = "patient", qualifiedByName = "patientIdToPatient")
-    @Mapping(source = "doctorId", target = "doctor", qualifiedByName = "doctorIdToDoctor")
-    AppointmentEntity toAppointmentEntity(AppointmentDTO appointmentDTO);
-
     @Mapping(target = "id", ignore = true)
-    @Mapping(source = "patientId", target = "patient", qualifiedByName = "patientIdToPatient")
-    @Mapping(source = "doctorId", target = "doctor", qualifiedByName = "doctorIdToDoctor")
-    AppointmentEntity toAppointmentEntity(CreateAppointmentRequest createAppointmentRequest);
+    @Mapping(source = "patientId", target = "patient", qualifiedByName = "patientRefFromId")
+    @Mapping(source = "doctorId", target = "doctor", qualifiedByName = "doctorRefFromId")
+    AppointmentEntity toAppointmentEntity(CreateAppointmentRequest request);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(source = "patientId", target = "patient", qualifiedByName = "patientIdToPatient")
-    @Mapping(source = "doctorId", target = "doctor", qualifiedByName = "doctorIdToDoctor")
-    void updateAppointmentEntityFromRequest(CreateAppointmentRequest request, @MappingTarget AppointmentEntity appointmentEntity);
-
-    @Named("patientIdToPatient")
-    default PatientEntity patientIdToPatient(java.util.UUID patientId) {
+    @Named("patientRefFromId")
+    default PatientEntity patientRefFromId(UUID patientId) {
         if (patientId == null) {
             return null;
         }
         return PatientEntity.builder().id(patientId).build();
     }
 
-    @Named("doctorIdToDoctor")
-    default DoctorEntity doctorIdToDoctor(java.util.UUID doctorId) {
+    @Named("doctorRefFromId")
+    default DoctorEntity doctorRefFromId(UUID doctorId) {
         if (doctorId == null) {
             return null;
         }
         return DoctorEntity.builder().id(doctorId).build();
     }
 }
-
-
-
-

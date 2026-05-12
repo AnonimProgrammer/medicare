@@ -1,14 +1,13 @@
 package com.ironhack.infra.adapter.output;
 
-import com.ironhack.domain.DoctorEntity;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.UUID;
+import com.ironhack.domain.DoctorEntity;
 
 @Repository
 public interface DoctorRepository extends JpaRepository<DoctorEntity, UUID> {
-
     boolean existsByFullName(String fullName);
 }
-

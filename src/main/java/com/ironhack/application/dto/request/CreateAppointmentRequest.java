@@ -1,16 +1,16 @@
 package com.ironhack.application.dto.request;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import com.ironhack.domain.AppointmentStatus;
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import jakarta.validation.constraints.FutureOrPresent;
-import jakarta.validation.constraints.NotNull;
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -18,7 +18,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class CreateAppointmentRequest {
-
     @NotNull(message = "Patient ID is required")
     private UUID patientId;
 
@@ -32,4 +31,3 @@ public class CreateAppointmentRequest {
     @NotNull(message = "Appointment status is required")
     private AppointmentStatus status;
 }
-

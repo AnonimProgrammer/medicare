@@ -1,119 +1,74 @@
-# Medicare - DTOs and MapStruct Mappers Implementation
+# DTOs and MapStruct mappers
 
-## Overview
-Advanced DTO and MapStruct mapper implementation following senior software engineering practices with:
-- Separation of concerns (Request, Response, DTO layers)
-- Type-safe mapping using MapStruct
-- Spring component model integration
-- Validation annotations
-- Builder pattern for object creation
-- Facade pattern for centralized mapping control
+The API boundary uses request DTOs with Bean Validation, read models as DTOs, and MapStruct interfaces (plus a small facade) to translate between the web layer and JPA entities under `com.ironhack.domain`.
 
 ---
 
-## DTOs Created
+## Package layout
 
-### 1. **DoctorDTO** 
-`com.ironhack.application.dto.DoctorDTO`
-- Fields: `id`, `fullName`, `specialty`
-- Used for read operations and API responses
+**Application DTOs** — `com.ironhack.application.dto`
 
-### 2. **PatientDTO**
-`com.ironhack.application.dto.PatientDTO`
-- Fields: `id`, `fullName`, `phoneNumber`, `appointments`
-- Includes bidirectional relationship with appointments
-- Full object graph representation
+```
+dto/
+├── DoctorDTO.java
+├── PatientDTO.java
+├── AppointmentDTO.java
+├── request/
+│   ├── RegisterDoctorRequest.java
+│   ├── CreatePatientRequest.java
+│   └── CreateAppointmentRequest.java
+└── response/
+    └── ApiResponse.java
+```
 
-### 3. **AppointmentDTO**
-`com.ironhack.application.dto.AppointmentDTO`
-- Fields: `id`, `patientId`, `doctorId`, `appointmentTime`, `status`
-- Additional fields: `doctor`, `patient` (full objects)
-- Flexible for different API response scenarios
+**Mappers and facade** — `com.ironhack.infra.adapter.mapper`
+
+```
+mapper/
+├── DoctorMapper.java
+├── PatientMapper.java
+├── AppointmentMapper.java
+└── MappingFacade.java
+```
+
+**Shared MapStruct defaults** — `com.ironhack.infra.config.MapStructConfig`
 
 ---
 
-## Request DTOs
+## Read DTOs
 
-### 1. **RegisterDoctorRequest**
-`com.ironhack.application.dto.request.RegisterDoctorRequest`
-- Validation: `@NotBlank`, `@NotNull`
-- Used for POST /doctors endpoint
-- Input validation at DTO level
+| Class | Purpose |
+|-------|---------|
+| `DoctorDTO` | Responses: `id`, `fullName`, `specialty` |
+| `PatientDTO` | Responses: `id`, `fullName`, `phoneNumber`, nested `appointments` when needed |
+| `AppointmentDTO` | Responses: identifiers, time, `status`, optional nested `doctor` / `patient` |
 
-### 2. **CreatePatientRequest**
-`com.ironhack.application.dto.request.CreatePatientRequest`
-- Validation: `@NotBlank`, `@Pattern` (phone format)
-- Used for POST /patients endpoint
-- Advanced phone number regex validation
-
-### 3. **CreateAppointmentRequest**
-`com.ironhack.application.dto.request.CreateAppointmentRequest`
-- Validation: `@NotNull`, `@FutureOrPresent`
-- Used for POST /appointments endpoint
-- Temporal validation for appointment scheduling
+All use Lombok (`@Getter`, `@Setter`, `@Builder`, constructors) to keep mapping targets small.
 
 ---
 
-## Response DTOs
+## Request DTOs and validation
 
-### **ApiResponse<T>**
-`com.ironhack.application.dto.response.ApiResponse`
-- Generic response wrapper
-- Fields: `status`, `message`, `data`, `errorCode`, `timestamp`
-- Factory methods: `success()`, `created()`, `error()`
-- Consistent API response format
-- `@JsonInclude(NON_NULL)` for clean JSON serialization
+| Class | Validation highlights |
+|-------|------------------------|
+| `RegisterDoctorRequest` | `@NotBlank` fullName, `@NotNull` specialty |
+| `CreatePatientRequest` | `@NotBlank` names, `@Pattern` on phone |
+| `CreateAppointmentRequest` | `@NotNull` ids and status, `@FutureOrPresent` on `appointmentTime` |
 
----
-
-## MapStruct Mappers
-
-### 1. **DoctorMapper**
-`com.ironhack.infra.adapter.mapper.DoctorMapper`
-```
-Operations:
-- toDoctorDTO(DoctorEntity) → DoctorDTO
-- toDoctorEntity(DoctorDTO) → DoctorEntity
-- toDoctoEntity(RegisterDoctorRequest) → DoctorEntity
-- updateDoctorEntityFromRequest(RegisterDoctorRequest, DoctorEntity) → void
-```
-- Ignores: `appointments` collection for creation flows
-- Spring component model enabled
-
-### 2. **PatientMapper**
-`com.ironhack.infra.adapter.mapper.PatientMapper`
-```
-Operations:
-- toPatientDTO(PatientEntity) → PatientDTO
-- toPatientEntity(PatientDTO) → PatientEntity
-- toPatientEntity(CreatePatientRequest) → PatientEntity
-- updatePatientEntityFromRequest(CreatePatientRequest, PatientEntity) → void
-```
-- Uses AppointmentMapper for nested mapping
-- Ignores: `id`, `appointments` for creation flows
-
-### 3. **AppointmentMapper**
-`com.ironhack.infra.adapter.mapper.AppointmentMapper`
-```
-Operations:
-- toAppointmentDTO(AppointmentEntity) → AppointmentDTO (with ID extraction)
-- toAppointmentEntity(AppointmentDTO) → AppointmentEntity
-- toAppointmentEntity(CreateAppointmentRequest) → AppointmentEntity
-- updateAppointmentEntityFromRequest(CreateAppointmentRequest, AppointmentEntity) → void
-
-Custom Named Mappings:
-- @Named("patientIdToPatient"): UUID → PatientEntity (creates lazy reference)
-- @Named("doctorIdToDoctor"): UUID → DoctorEntity (creates lazy reference)
-```
-- Advanced UUID-to-Entity lazy loading
-- Bidirectional relationship mapping
+Typical HTTP mapping (illustrative): `POST /doctors`, `POST /patients`, `POST /appointments` with `@Valid` on the request body.
 
 ---
 
-## MapStruct Configuration
+## `ApiResponse<T>`
 
-### **MapStructMapperConfig**
-`com.ironhack.infra.adapter.mapper.config.MapStructMapperConfig`
+`com.ironhack.application.dto.response.ApiResponse` wraps payloads with `status`, `message`, `data`, optional `errorCode`, and `timestamp`, with helpers such as `success`, `created`, and `error`. Null fields are omitted from JSON via `@JsonInclude(NON_NULL)`.
+
+---
+
+## MapStruct configuration
+
+Shared settings live on `MapStructConfig`:
+
 ```java
 @MapperConfig(
     componentModel = "spring",
@@ -121,86 +76,170 @@ Custom Named Mappings:
     unmappedSourcePolicy = ReportingPolicy.WARN,
     typeConversionPolicy = ReportingPolicy.WARN
 )
+public interface MapStructConfig { }
 ```
-- Spring component model for dependency injection
-- Strict error reporting for unmapped properties
-- Warnings for unused source mappings
+
+Every mapper references this via `@Mapper(config = MapStructConfig.class, ...)`.
 
 ---
 
-## Mapping Facade
+## Mapper interfaces
 
-### **MappingFacade**
-`com.ironhack.infra.adapter.mapper.MappingFacade`
-- Central facade for all mapping operations
-- Convenience methods with Stream API support
-- Single injection point for services/controllers
-- Type-safe mapping operations
-- Example usage:
-  ```java
-  @Autowired MappingFacade mappingFacade;
-  
-  DoctorDTO dto = mappingFacade.toDoctorDTO(doctorEntity);
-  List<DoctorDTO> dtos = mappingFacade.toDoctorDTOs(entities);
-  ```
+### `DoctorMapper`
 
----
+- `DoctorDTO toDoctorDTO(DoctorEntity)`
+- `DoctorEntity toDoctorEntity(DoctorDTO)` — ignores `appointments` on create-style paths
+- `DoctorEntity toDoctoEntity(RegisterDoctorRequest)` — ignores `id`, `appointments` (note: method name as implemented)
+- `void updateDoctorEntityFromRequest(RegisterDoctorRequest, @MappingTarget DoctorEntity)`
 
-## Advanced Features
+### `PatientMapper`
 
-### 1. **Bidirectional Mapping**
-- Support for both Entity → DTO and DTO → Entity conversions
-- Update operations using `@MappingTarget`
+Uses `AppointmentMapper` for nested appointment graphs.
 
-### 2. **Lazy Loading**
-- UUID-to-Entity conversion avoids eager loading
-- Creates minimal entity stubs for relationship establishment
+- `PatientDTO toPatientDTO(PatientEntity)`
+- `PatientEntity toPatientEntity(PatientDTO)`
+- `PatientEntity toPatientEntity(CreatePatientRequest)` — ignores `id`, `appointments` for create-style mapping
+- `void updatePatientEntityFromRequest(CreatePatientRequest, @MappingTarget PatientEntity)`
 
-### 3. **Composite Mapping**
-- Nested mapper composition (e.g., PatientMapper uses AppointmentMapper)
-- Automatic recursive mapping
+### `AppointmentMapper`
 
-### 4. **Validation**
-- JSR-380 annotations on request DTOs
-- Input validation before entity creation
+Uses `DoctorMapper` and defines `@Named` helpers so foreign keys become lightweight entity stubs instead of loading full graphs during mapping.
 
-### 5. **Generic Response Wrapper**
-- Type-safe generic ApiResponse<T>
-- Consistent error handling
-- Timestamp tracking
+- `AppointmentDTO toAppointmentDTO(AppointmentEntity)` — maps nested `patient.id` / `doctor.id` to `patientId` / `doctorId`
+- `AppointmentEntity toAppointmentEntity(AppointmentDTO)`
+- `AppointmentEntity toAppointmentEntity(CreateAppointmentRequest)` — ignores generated `id`
+- `void updateAppointmentEntityFromRequest(CreateAppointmentRequest, @MappingTarget AppointmentEntity)`
 
----
+Lazy reference example (from `AppointmentMapper`):
 
-## Compilation Status
-✅ **Project compiles successfully** with MapStruct annotation processors enabled
-
-## Architecture Diagram
+```java
+@Named("patientIdToPatient")
+default PatientEntity patientIdToPatient(UUID patientId) {
+    if (patientId == null) {
+        return null;
+    }
+    return PatientEntity.builder().id(patientId).build();
+}
 ```
-Request Layer
-     ↓
-Request DTOs → DoctorMapper, PatientMapper, AppointmentMapper
-     ↓
-Service Layer (RegisterDoctorUseCase, etc.)
-     ↓
-Entity Layer (DoctorEntity, PatientEntity, AppointmentEntity)
-     ↓
-Persistence Layer
-     ↓
-DTOs → Response Wrapper (ApiResponse<T>) → JSON Response
+
+Update-style mapping example (doctor):
+
+```java
+@Mapping(target = "id", ignore = true)
+@Mapping(target = "appointments", ignore = true)
+void updateDoctorEntityFromRequest(
+    RegisterDoctorRequest request,
+    @MappingTarget DoctorEntity doctorEntity
+);
 ```
 
 ---
 
-## Best Practices Applied
+## `MappingFacade`
 
-✓ Single Responsibility Principle (SRP)
-✓ Dependency Injection via Spring
-✓ Builder pattern for DTOs
-✓ Lombok for boilerplate reduction
-✓ Strict compilation warnings
-✓ Type safety with MapStruct
-✓ Validation at API boundary
-✓ Facade pattern for simplified usage
-✓ Lazy loading for relationships
-✓ Immutable data transfer objects
+`MappingFacade` is a Spring `@Component` that injects all mappers and exposes typed helpers (including list/stream helpers) so services and future controllers depend on one type instead of three mapper interfaces. Partial updates remain on the mapper interfaces (`update*FromRequest` with `@MappingTarget`) if a use case needs them before the facade grows.
 
+```java
+@Component
+@RequiredArgsConstructor
+public class MappingFacade {
+    private final DoctorMapper doctorMapper;
+    private final PatientMapper patientMapper;
+    private final AppointmentMapper appointmentMapper;
+    // … facade methods …
+}
+```
+
+---
+
+## Request-to-persistence flow
+
+```
+HTTP request (@Valid)
+        ↓
+Request DTO (validation annotations)
+        ↓
+MapStruct mapper → domain entity
+        ↓
+Repository / use case
+        ↓
+Entity → read DTO
+        ↓
+ApiResponse<T> → JSON
+```
+
+---
+
+## Example traces
+
+**Create doctor (illustrative)**
+
+```
+POST /api/v1/doctors
+{ "fullName": "Dr. John Smith", "specialty": "CARDIOLOGY" }
+      ↓
+RegisterDoctorRequest (@Valid)
+      ↓
+DoctorMapper.toDoctoEntity(request)
+      ↓
+DoctorEntity persisted
+      ↓
+DoctorMapper.toDoctorDTO(saved)
+      ↓
+ApiResponse<DoctorDTO> (e.g. 201 + message + data + timestamp)
+```
+
+**List appointments (illustrative)**
+
+```
+GET /api/v1/appointments
+      ↓
+loaded AppointmentEntity rows
+      ↓
+AppointmentMapper → List<AppointmentDTO>
+      ↓
+ApiResponse<List<AppointmentDTO>>
+```
+
+---
+
+## Wiring mappers in services and controllers
+
+Services typically accept request DTOs, call the facade or a mapper to build entities, persist, then map back to read DTOs wrapped in `ApiResponse`.
+
+Controllers can stay thin: validate the body, delegate to a use case, map results:
+
+```java
+@RestController
+@RequestMapping("/api/v1/doctors")
+@RequiredArgsConstructor
+public class DoctorController {
+
+    private final MappingFacade mappingFacade;
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<DoctorDTO>> create(
+            @Valid @RequestBody RegisterDoctorRequest request) {
+        // mappingFacade → entity → save → mappingFacade.toDoctorDTO(saved)
+        // return ApiResponse.created(...)
+    }
+}
+```
+
+---
+
+## Build tooling
+
+MapStruct and Lombok annotation processing are enabled in `pom.xml`. Unmapped target properties fail the build (`ReportingPolicy.ERROR`), which keeps mapper interfaces aligned with DTO and entity fields as they evolve.
+
+---
+
+## Possible next steps
+
+- REST controllers and `@ControllerAdvice` for consistent error bodies
+- Map domain exceptions to `ApiResponse` error shapes
+- Pagination metadata on list endpoints
+- Auditing fields (`createdAt`, `updatedAt`) on entities and DTOs where needed
+- Read-side caching where response shapes are stable
+
+For domain rules and flows, see [System flow](foundation-flow.md).
