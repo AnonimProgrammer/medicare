@@ -1,0 +1,38 @@
+services:
+  app:
+    build: .
+    container_name: medicare-app
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - medicare-network
+
+  db:
+    image: mysql:8
+    container_name: medicare-db
+    env_file:
+      - .env
+    volumes:
+      - medicare-db-data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    networks:
+      - medicare-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+networks:
+  medicare-network:
+    driver: bridge
+
+volumes:
+  medicare-db-data:
