@@ -1,14 +1,14 @@
 package com.ironhack.domain;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "appointments")
@@ -18,7 +18,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class AppointmentEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -38,4 +37,3 @@ public class AppointmentEntity {
     @Column(nullable = false)
     private AppointmentStatus status;
 }
-

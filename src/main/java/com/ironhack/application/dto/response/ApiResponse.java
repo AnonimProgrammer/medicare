@@ -1,22 +1,17 @@
 package com.ironhack.application.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.time.Instant;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
-
     private int status;
     private String message;
     private T data;
@@ -42,12 +37,16 @@ public class ApiResponse<T> {
     }
 
     public static <T> ApiResponse<T> error(int status, String message, String errorCode) {
+        return error(status, message, errorCode, null);
+    }
+
+    public static <T> ApiResponse<T> error(int status, String message, String errorCode, T data) {
         return ApiResponse.<T>builder()
                 .status(status)
                 .message(message)
                 .errorCode(errorCode)
+                .data(data)
                 .timestamp(Instant.now())
                 .build();
     }
 }
-

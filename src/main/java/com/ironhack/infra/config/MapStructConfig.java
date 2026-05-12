@@ -1,4 +1,4 @@
-package com.ironhack.infra.adapter.mapper.config;
+package com.ironhack.infra.config;
 
 import org.mapstruct.MapperConfig;
 import org.mapstruct.ReportingPolicy;
@@ -7,8 +7,5 @@ import org.mapstruct.ReportingPolicy;
         componentModel = "spring",
         unmappedTargetPolicy = ReportingPolicy.ERROR,
         unmappedSourcePolicy = ReportingPolicy.WARN,
-        typeConversionPolicy = ReportingPolicy.WARN
-)
-public interface MapStructMapperConfig {
-}
-
+        typeConversionPolicy = ReportingPolicy.WARN)
+public interface MapStructConfig {}
