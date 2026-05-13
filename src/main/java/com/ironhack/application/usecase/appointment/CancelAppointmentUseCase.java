@@ -1,4 +1,4 @@
-package com.ironhack.application.usecase;
+package com.ironhack.application.usecase.appointment;
 
 import java.util.UUID;
 
@@ -34,7 +34,7 @@ public class CancelAppointmentUseCase {
 
     private AppointmentEntity requireScheduledAppointment(UUID appointmentId) {
         AppointmentEntity appointment = appointmentRepository
-                .findById(appointmentId)
+                .findWithAssociationsById(appointmentId)
                 .orElseThrow(() -> new NotFoundException("Appointment not found."));
         ensureAppointmentIsScheduled(appointment);
         return appointment;

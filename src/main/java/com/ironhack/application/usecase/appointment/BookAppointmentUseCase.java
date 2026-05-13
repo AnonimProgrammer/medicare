@@ -1,4 +1,4 @@
-package com.ironhack.application.usecase;
+package com.ironhack.application.usecase.appointment;
 
 import java.time.Clock;
 import java.time.LocalDateTime;

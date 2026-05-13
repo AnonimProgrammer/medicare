@@ -1,6 +1,5 @@
 package com.ironhack.domain;
 
-import java.util.List;
 import java.util.UUID;
 
 import jakarta.persistence.*;
@@ -27,7 +26,4 @@ public class PatientEntity {
 
     @Column(nullable = false, unique = true)
     private String phoneNumber;
-
-    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AppointmentEntity> appointments;
 }

@@ -46,7 +46,6 @@ class AppointmentRestAdapterTest {
 
     private UUID doctorId;
     private UUID patientId;
-    private UUID appointmentId;
 
     @BeforeEach
     void setup() {
@@ -141,7 +140,7 @@ class AppointmentRestAdapterTest {
 
         // Extract appointment ID from response
         String appointmentId =
-                objectMapper.readTree(response).get("data").get("id").asText();
+                objectMapper.readTree(response).get("data").get("id").asString();
 
         // Cancel the appointment
         mockMvc.perform(post("/v1/appointments/{id}/cancel", appointmentId))
@@ -173,12 +172,59 @@ class AppointmentRestAdapterTest {
                 .getContentAsString();
 
         String appointmentId =
-                objectMapper.readTree(response).get("data").get("id").asText();
+                objectMapper.readTree(response).get("data").get("id").asString();
 
         // Cancel the appointment first time
         mockMvc.perform(post("/v1/appointments/{id}/cancel", appointmentId)).andExpect(status().isOk());
 
         // Try to cancel again
         mockMvc.perform(post("/v1/appointments/{id}/cancel", appointmentId)).andExpect(status().isConflict());
+    }
+
+    // ==================== List Patient Appointments Tests ====================
+
+    @Test
+    @DisplayName("Should return patient appointments ordered by time, without nested patient field")
+    void shouldListPatientAppointmentsOrderedByTime() throws Exception {
+        LocalDateTime later = LocalDateTime.now().plusDays(14);
+        LocalDateTime earlier = LocalDateTime.now().plusDays(7);
+
+        mockMvc.perform(post("/v1/appointments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new BookAppointmentRequest(patientId, doctorId, later))))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/v1/appointments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new BookAppointmentRequest(patientId, doctorId, earlier))))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/v1/patients/{id}/appointments", patientId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("Patient appointments retrieved successfully."))
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].status").value("SCHEDULED"))
+                .andExpect(jsonPath("$.data[0].doctor.id").value(doctorId.toString()))
+                .andExpect(jsonPath("$.data[0].patient").doesNotExist())
+                .andExpect(jsonPath("$.data[1].doctor.id").value(doctorId.toString()));
+    }
+
+    @Test
+    @DisplayName("Should return empty list when patient has no appointments")
+    void shouldReturnEmptyListWhenPatientHasNoAppointments() throws Exception {
+        mockMvc.perform(get("/v1/patients/{id}/appointments", patientId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.data.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("Should return 404 when listing appointments for a non-existent patient")
+    void shouldReturnNotFoundWhenListingAppointmentsForUnknownPatient() throws Exception {
+        mockMvc.perform(get("/v1/patients/{id}/appointments", UUID.randomUUID()))
+                .andExpect(status().isNotFound());
     }
 }
