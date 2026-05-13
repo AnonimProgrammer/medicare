@@ -2,6 +2,7 @@ package com.ironhack.application.usecase;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
@@ -30,27 +31,10 @@ public class BookAppointmentUseCase {
     private final Clock clock;
 
     public ApiResponse<AppointmentDTO> invoke(BookAppointmentRequest request) {
-        LocalDateTime now = LocalDateTime.now(clock);
-        if (request.appointmentTime().isBefore(now)) {
-            throw new IllegalArgumentException("Appointment time must not be in the past.");
-        }
-
-        PatientEntity patient = patientRepository
-                .findById(request.patientId())
-                .orElseThrow(() -> new NotFoundException("Patient not found."));
-
-        DoctorEntity doctor = doctorRepository
-                .findById(request.doctorId())
-                .orElseThrow(() -> new NotFoundException("Doctor not found."));
-
-        if (doctor.getSpecialty() == null) {
-            throw new ConflictException("Doctor has no specialty assigned; cannot book appointments.");
-        }
-
-        if (appointmentRepository.existsByDoctor_IdAndAppointmentTimeAndStatus(
-                request.doctorId(), request.appointmentTime(), AppointmentStatus.SCHEDULED)) {
-            throw new ConflictException("The doctor already has a scheduled appointment at this time.");
-        }
+        ensureAppointmentTimeInFuture(request.appointmentTime());
+        PatientEntity patient = requirePatient(request.patientId());
+        DoctorEntity doctor = requireDoctorWithSpecialty(request.doctorId());
+        ensureDoctorHasNoSchedulingConflict(request.doctorId(), request.appointmentTime());
 
         AppointmentEntity entity = AppointmentEntity.builder()
                 .patient(patient)
@@ -63,5 +47,31 @@ public class BookAppointmentUseCase {
         AppointmentDTO dto = mappingFacade.toAppointmentDTO(saved);
 
         return ApiResponse.created(dto, "Appointment booked successfully.");
+    }
+
+    private void ensureAppointmentTimeInFuture(LocalDateTime appointmentTime) {
+        if (appointmentTime.isBefore(LocalDateTime.now(clock))) {
+            throw new IllegalArgumentException("Appointment time must not be in the past.");
+        }
+    }
+
+    private PatientEntity requirePatient(UUID patientId) {
+        return patientRepository.findById(patientId).orElseThrow(() -> new NotFoundException("Patient not found."));
+    }
+
+    private DoctorEntity requireDoctorWithSpecialty(UUID doctorId) {
+        DoctorEntity doctor =
+                doctorRepository.findById(doctorId).orElseThrow(() -> new NotFoundException("Doctor not found."));
+        if (doctor.getSpecialty() == null) {
+            throw new ConflictException("Doctor has no specialty assigned; cannot book appointments.");
+        }
+        return doctor;
+    }
+
+    private void ensureDoctorHasNoSchedulingConflict(UUID doctorId, LocalDateTime appointmentTime) {
+        if (appointmentRepository.existsByDoctor_IdAndAppointmentTimeAndStatus(
+                doctorId, appointmentTime, AppointmentStatus.SCHEDULED)) {
+            throw new ConflictException("The doctor already has a scheduled appointment at this time.");
+        }
     }
 }
