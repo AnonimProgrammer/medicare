@@ -1,5 +1,7 @@
 package com.ironhack.infra.adapter.input;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -10,14 +12,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ironhack.application.dto.PatientAppointmentDTO;
 import com.ironhack.application.dto.PatientDTO;
+import com.ironhack.application.dto.query.AppointmentQueryCriteria;
 import com.ironhack.application.dto.request.CreatePatientRequest;
 import com.ironhack.application.dto.response.ApiResponse;
 import com.ironhack.application.usecase.appointment.ListPatientAppointmentsUseCase;
 import com.ironhack.application.usecase.patient.CreatePatientUseCase;
+import com.ironhack.domain.AppointmentStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -35,8 +40,14 @@ public class PatientRestAdapter {
     }
 
     @GetMapping("/{id}/appointments")
-    public ResponseEntity<ApiResponse<List<PatientAppointmentDTO>>> listPatientAppointments(@PathVariable UUID id) {
-        ApiResponse<List<PatientAppointmentDTO>> body = listPatientAppointmentsUseCase.invoke(id);
+    public ResponseEntity<ApiResponse<List<PatientAppointmentDTO>>> listPatientAppointments(
+            @PathVariable UUID id,
+            @RequestParam(name = "status", required = false) List<AppointmentStatus> status,
+            @RequestParam(required = false) LocalDate date,
+            @RequestParam(required = false) Instant from,
+            @RequestParam(required = false) Instant to) {
+        var criteria = new AppointmentQueryCriteria(status, date, from, to);
+        ApiResponse<List<PatientAppointmentDTO>> body = listPatientAppointmentsUseCase.invoke(id, criteria);
         return ResponseEntity.ok(body);
     }
 }

@@ -114,12 +114,25 @@ flowchart TD
 
 ### 3.3 List Appointments by Date / Doctor Schedule
 
-- **By date** — query all appointments where `appointmentTime` falls within the given day.
+- **By date** — query all appointments where `appointmentTime` falls within the given calendar day (in the JVM default time zone).
 - **Doctor schedule** — query all appointments for a given `doctorId`, optionally filtered by date range, ordered by `appointmentTime`.
+- **Patient appointments** — same optional filters on `GET /v1/patients/{id}/appointments`.
+- **Clinic-wide list** — `GET /v1/appointments` returns full `AppointmentDTO` rows (patient and doctor embedded), ordered by `appointmentTime` ascending.
+
+**Query parameters** (all optional; filters are combined with **AND**):
+
+| Parameter | Meaning |
+|-----------|---------|
+| `status` | Repeat the parameter for multiple values, e.g. `status=SCHEDULED&status=COMPLETED`. Omit entirely to ignore status. |
+| `date` | ISO calendar date (`YYYY-MM-DD`). Matches appointments from start-of-day through end-of-day in the JVM default zone. |
+| `from` | Inclusive lower bound on `appointmentTime` as **UTC** `Instant` (ISO-8601, e.g. `2026-05-14T00:00:00Z`). Converted to `LocalDateTime` using the JVM default zone for comparison with stored times. |
+| `to` | Inclusive upper bound on `appointmentTime`, same format and zone rules as `from`. |
+
+`from` must not be after `to` when both are present (otherwise the API returns **400 Bad Request**).
 
 ### 3.4 View Patient Appointments
 
-Query all appointments for a given `patientId`, ordered by `appointmentTime` (most recent first or upcoming first, depending on the use case).
+Query all appointments for a given `patientId`, ordered by `appointmentTime` ascending (upcoming first). The same optional query parameters as in §3.3 apply on `GET /v1/patients/{id}/appointments`.
 
 ---
 
