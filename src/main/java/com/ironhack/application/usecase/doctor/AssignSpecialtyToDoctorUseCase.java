@@ -1,4 +1,4 @@
-package com.ironhack.application.usecase;
+package com.ironhack.application.usecase.doctor;
 
 import java.util.UUID;
 

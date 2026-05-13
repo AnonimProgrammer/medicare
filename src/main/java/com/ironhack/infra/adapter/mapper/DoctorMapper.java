@@ -12,6 +12,5 @@ public interface DoctorMapper {
     DoctorDTO toDoctorDTO(DoctorEntity doctorEntity);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "appointments", ignore = true)
     DoctorEntity toDoctorEntity(CreateDoctorRequest createDoctorRequest);
 }

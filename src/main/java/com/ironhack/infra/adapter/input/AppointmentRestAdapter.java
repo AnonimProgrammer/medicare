@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ironhack.application.dto.AppointmentDTO;
 import com.ironhack.application.dto.request.BookAppointmentRequest;
 import com.ironhack.application.dto.response.ApiResponse;
-import com.ironhack.application.usecase.BookAppointmentUseCase;
-import com.ironhack.application.usecase.CancelAppointmentUseCase;
+import com.ironhack.application.usecase.appointment.BookAppointmentUseCase;
+import com.ironhack.application.usecase.appointment.CancelAppointmentUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
