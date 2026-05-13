@@ -13,12 +13,20 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.ironhack.application.dto.response.ApiResponse;
 import com.ironhack.application.exception.ConflictException;
+import com.ironhack.application.exception.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @RestControllerAdvice
 public class GlobalRestAdvice {
     private static final Logger log = LoggerFactory.getLogger(GlobalRestAdvice.class);
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleNotFound(NotFoundException ex) {
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        return ResponseEntity.status(status)
+                .body(ApiResponse.error(status.value(), ex.getMessage(), ErrorCode.NOT_FOUND.name()));
+    }
 
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ApiResponse<Object>> handleConflict(ConflictException ex) {
