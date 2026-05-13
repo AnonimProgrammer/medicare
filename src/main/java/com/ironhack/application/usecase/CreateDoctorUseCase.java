@@ -18,11 +18,12 @@ public class CreateDoctorUseCase {
     private final MappingFacade mappingFacade;
 
     public ApiResponse<DoctorDTO> invoke(CreateDoctorRequest request) {
-        rejectDuplicate(request.getFullName());
+        rejectDuplicate(request.fullName());
 
         DoctorEntity entity = mappingFacade.toDoctorEntity(request);
         DoctorEntity saved = doctorRepository.save(entity);
         DoctorDTO dto = mappingFacade.toDoctorDTO(saved);
+
         return ApiResponse.created(dto, "Doctor created successfully.");
     }
 

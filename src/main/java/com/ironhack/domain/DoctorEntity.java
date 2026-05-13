@@ -26,7 +26,6 @@ public class DoctorEntity {
     private String fullName;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Specialty specialty;
 
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
