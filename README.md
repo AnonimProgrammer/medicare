@@ -1,6 +1,6 @@
 # MediCare
 
-[![CI](https://github.com/AnonimProgrammer/medicare/actions/workflows/ci.yml/badge.svg)](https://github.com/AnonimProgrammer/medicare/actions/workflows/ci.yml)
+[![MediCare CI](https://github.com/AnonimProgrammer/medicare/actions/workflows/ci.yml/badge.svg)](https://github.com/AnonimProgrammer/medicare/actions/workflows/ci.yml)
 
 A small clinic appointment system that lets a clinic manage patients, doctors, and their appointments while enforcing core scheduling rules.
 
