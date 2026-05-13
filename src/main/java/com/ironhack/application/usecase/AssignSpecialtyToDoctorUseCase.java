@@ -20,13 +20,16 @@ public class AssignSpecialtyToDoctorUseCase {
     private final MappingFacade mappingFacade;
 
     public ApiResponse<DoctorDTO> invoke(UUID doctorId, AssignDoctorSpecialtyRequest request) {
-        DoctorEntity doctor =
-                doctorRepository.findById(doctorId).orElseThrow(() -> new NotFoundException("Doctor not found"));
+        DoctorEntity doctor = requireDoctor(doctorId);
 
         doctor.setSpecialty(request.specialty());
         DoctorEntity saved = doctorRepository.save(doctor);
         DoctorDTO dto = mappingFacade.toDoctorDTO(saved);
 
         return ApiResponse.success(dto, "Doctor specialty assigned successfully.");
+    }
+
+    private DoctorEntity requireDoctor(UUID doctorId) {
+        return doctorRepository.findById(doctorId).orElseThrow(() -> new NotFoundException("Doctor not found"));
     }
 }
