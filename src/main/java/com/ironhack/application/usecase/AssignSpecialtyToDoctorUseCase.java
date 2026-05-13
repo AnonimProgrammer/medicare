@@ -3,6 +3,7 @@ package com.ironhack.application.usecase;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ironhack.application.dto.DoctorDTO;
 import com.ironhack.application.dto.request.AssignDoctorSpecialtyRequest;
@@ -19,6 +20,7 @@ public class AssignSpecialtyToDoctorUseCase {
     private final DoctorRepository doctorRepository;
     private final MappingFacade mappingFacade;
 
+    @Transactional
     public ApiResponse<DoctorDTO> invoke(UUID doctorId, AssignDoctorSpecialtyRequest request) {
         DoctorEntity doctor = requireDoctor(doctorId);
 

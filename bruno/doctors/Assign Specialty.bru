@@ -1,0 +1,21 @@
+meta {
+  name: Assign Specialty
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{base_url}}/v1/doctors/{{id}}/specialty
+  body: json
+  auth: none
+}
+
+vars:pre-request {
+  id: 00000000-0000-4000-8000-000000000001
+}
+
+body:json {
+  {
+    "specialty": "THERAPIST"
+  }
+}

@@ -1,6 +1,7 @@
 package com.ironhack.application.usecase;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ironhack.application.dto.PatientDTO;
 import com.ironhack.application.dto.request.CreatePatientRequest;
@@ -17,6 +18,7 @@ public class CreatePatientUseCase {
     private final PatientRepository patientRepository;
     private final MappingFacade mappingFacade;
 
+    @Transactional
     public ApiResponse<PatientDTO> invoke(CreatePatientRequest request) {
         rejectDuplicate(request.phoneNumber());
 

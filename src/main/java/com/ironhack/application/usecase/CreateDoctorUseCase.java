@@ -1,6 +1,7 @@
 package com.ironhack.application.usecase;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ironhack.application.dto.DoctorDTO;
 import com.ironhack.application.dto.request.CreateDoctorRequest;
@@ -17,6 +18,7 @@ public class CreateDoctorUseCase {
     private final DoctorRepository doctorRepository;
     private final MappingFacade mappingFacade;
 
+    @Transactional
     public ApiResponse<DoctorDTO> invoke(CreateDoctorRequest request) {
         rejectDuplicate(request.fullName());
 

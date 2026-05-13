@@ -3,6 +3,7 @@ package com.ironhack.application.usecase;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ironhack.application.dto.AppointmentDTO;
 import com.ironhack.application.dto.response.ApiResponse;
@@ -20,6 +21,7 @@ public class CancelAppointmentUseCase {
     private final AppointmentRepository appointmentRepository;
     private final MappingFacade mappingFacade;
 
+    @Transactional
     public ApiResponse<AppointmentDTO> invoke(UUID appointmentId) {
         AppointmentEntity appointment = requireScheduledAppointment(appointmentId);
 
