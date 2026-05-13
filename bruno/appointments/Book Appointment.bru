@@ -1,0 +1,19 @@
+meta {
+  name: Book Appointment
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/v1/appointments
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "patientId": "00000000-0000-4000-8000-000000000002",
+    "doctorId": "00000000-0000-4000-8000-000000000001",
+    "appointmentTime": "2026-06-01T10:00:00"
+  }
+}

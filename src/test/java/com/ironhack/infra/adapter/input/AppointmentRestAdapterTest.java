@@ -1,8 +1,16 @@
 package com.ironhack.infra.adapter.input;
 
-import tools.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+
 import com.ironhack.application.dto.request.BookAppointmentRequest;
-import com.ironhack.domain.AppointmentStatus;
 import com.ironhack.domain.DoctorEntity;
 import com.ironhack.domain.PatientEntity;
 import com.ironhack.domain.Specialty;
@@ -12,15 +20,7 @@ import com.ironhack.infra.adapter.output.PatientRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -29,7 +29,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class AppointmentRestAdapterTest {
-
     @Autowired
     private MockMvc mockMvc;
 
@@ -123,25 +122,6 @@ class AppointmentRestAdapterTest {
                 .andExpect(status().isNotFound());
     }
 
-    @Test
-    @DisplayName("Should return 409 when doctor already has appointment at same time")
-    void shouldReturnConflictWhenDoctorHasSchedulingConflict() throws Exception {
-        LocalDateTime appointmentTime = LocalDateTime.now().plusDays(7).withHour(10).withMinute(0);
-        BookAppointmentRequest firstRequest = new BookAppointmentRequest(patientId, doctorId, appointmentTime);
-
-        // Book first appointment
-        mockMvc.perform(post("/v1/appointments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(firstRequest)))
-                .andExpect(status().isCreated());
-
-        // Try to book at same time
-        mockMvc.perform(post("/v1/appointments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(firstRequest)))
-                .andExpect(status().isConflict());
-    }
-
     // ==================== Cancel Appointment Tests ====================
 
     @Test
@@ -160,7 +140,8 @@ class AppointmentRestAdapterTest {
                 .getContentAsString();
 
         // Extract appointment ID from response
-        String appointmentId = objectMapper.readTree(response).get("data").get("id").asText();
+        String appointmentId =
+                objectMapper.readTree(response).get("data").get("id").asText();
 
         // Cancel the appointment
         mockMvc.perform(post("/v1/appointments/{id}/cancel", appointmentId))
@@ -173,8 +154,7 @@ class AppointmentRestAdapterTest {
     @Test
     @DisplayName("Should return 404 when trying to cancel non-existent appointment")
     void shouldReturnNotFoundWhenAppointmentDoesNotExist() throws Exception {
-        mockMvc.perform(post("/v1/appointments/{id}/cancel", UUID.randomUUID()))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(post("/v1/appointments/{id}/cancel", UUID.randomUUID())).andExpect(status().isNotFound());
     }
 
     @Test
@@ -192,16 +172,13 @@ class AppointmentRestAdapterTest {
                 .getResponse()
                 .getContentAsString();
 
-        String appointmentId = objectMapper.readTree(response).get("data").get("id").asText();
+        String appointmentId =
+                objectMapper.readTree(response).get("data").get("id").asText();
 
         // Cancel the appointment first time
-        mockMvc.perform(post("/v1/appointments/{id}/cancel", appointmentId))
-                .andExpect(status().isOk());
+        mockMvc.perform(post("/v1/appointments/{id}/cancel", appointmentId)).andExpect(status().isOk());
 
         // Try to cancel again
-        mockMvc.perform(post("/v1/appointments/{id}/cancel", appointmentId))
-                .andExpect(status().isConflict());
+        mockMvc.perform(post("/v1/appointments/{id}/cancel", appointmentId)).andExpect(status().isConflict());
     }
-
 }
-

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ironhack.application.dto.AppointmentDTO;
 import com.ironhack.application.dto.request.BookAppointmentRequest;
@@ -30,6 +31,7 @@ public class BookAppointmentUseCase {
     private final MappingFacade mappingFacade;
     private final Clock clock;
 
+    @Transactional
     public ApiResponse<AppointmentDTO> invoke(BookAppointmentRequest request) {
         ensureAppointmentTimeInFuture(request.appointmentTime());
         PatientEntity patient = requirePatient(request.patientId());

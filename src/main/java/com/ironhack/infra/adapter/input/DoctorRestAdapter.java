@@ -1,5 +1,11 @@
 package com.ironhack.infra.adapter.input;
 
+import java.util.UUID;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
 import com.ironhack.application.dto.DoctorDTO;
 import com.ironhack.application.dto.request.AssignDoctorSpecialtyRequest;
 import com.ironhack.application.dto.request.CreateDoctorRequest;
@@ -8,11 +14,6 @@ import com.ironhack.application.usecase.AssignSpecialtyToDoctorUseCase;
 import com.ironhack.application.usecase.CreateDoctorUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/doctors")
@@ -28,8 +29,9 @@ public class DoctorRestAdapter {
     }
 
     @PatchMapping("/{id}/specialty")
-    public ResponseEntity<ApiResponse<DoctorDTO>> updateDoctor(@PathVariable UUID id, @Valid @RequestBody AssignDoctorSpecialtyRequest request) {
-        ApiResponse<DoctorDTO> body=assignSpecialtyToDoctorUseCase.invoke(id, request);
-        return ResponseEntity.status(HttpStatus.OK).body(body);
+    public ResponseEntity<ApiResponse<DoctorDTO>> assignSpecialtyToDoctor(
+            @PathVariable UUID id, @Valid @RequestBody AssignDoctorSpecialtyRequest request) {
+        ApiResponse<DoctorDTO> body = assignSpecialtyToDoctorUseCase.invoke(id, request);
+        return ResponseEntity.ok(body);
     }
 }
