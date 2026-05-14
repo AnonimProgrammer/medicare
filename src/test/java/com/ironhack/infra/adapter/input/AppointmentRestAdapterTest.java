@@ -46,7 +46,6 @@ class AppointmentRestAdapterTest {
 
     private UUID doctorId;
     private UUID patientId;
-    private UUID appointmentId;
 
     @BeforeEach
     void setup() {
@@ -141,7 +140,7 @@ class AppointmentRestAdapterTest {
 
         // Extract appointment ID from response
         String appointmentId =
-                objectMapper.readTree(response).get("data").get("id").asText();
+                objectMapper.readTree(response).get("data").get("id").asString();
 
         // Cancel the appointment
         mockMvc.perform(post("/v1/appointments/{id}/cancel", appointmentId))
@@ -173,12 +172,139 @@ class AppointmentRestAdapterTest {
                 .getContentAsString();
 
         String appointmentId =
-                objectMapper.readTree(response).get("data").get("id").asText();
+                objectMapper.readTree(response).get("data").get("id").asString();
 
         // Cancel the appointment first time
         mockMvc.perform(post("/v1/appointments/{id}/cancel", appointmentId)).andExpect(status().isOk());
 
         // Try to cancel again
         mockMvc.perform(post("/v1/appointments/{id}/cancel", appointmentId)).andExpect(status().isConflict());
+    }
+
+    // ==================== List Patient Appointments Tests ====================
+
+    @Test
+    @DisplayName("Should return patient appointments ordered by time, without nested patient field")
+    void shouldListPatientAppointmentsOrderedByTime() throws Exception {
+        LocalDateTime later = LocalDateTime.now().plusDays(14);
+        LocalDateTime earlier = LocalDateTime.now().plusDays(7);
+
+        mockMvc.perform(post("/v1/appointments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new BookAppointmentRequest(patientId, doctorId, later))))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/v1/appointments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new BookAppointmentRequest(patientId, doctorId, earlier))))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/v1/patients/{id}/appointments", patientId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("Patient appointments retrieved successfully."))
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].status").value("SCHEDULED"))
+                .andExpect(jsonPath("$.data[0].doctor.id").value(doctorId.toString()))
+                .andExpect(jsonPath("$.data[0].patient").doesNotExist())
+                .andExpect(jsonPath("$.data[1].doctor.id").value(doctorId.toString()));
+    }
+
+    @Test
+    @DisplayName("Should return empty list when patient has no appointments")
+    void shouldReturnEmptyListWhenPatientHasNoAppointments() throws Exception {
+        mockMvc.perform(get("/v1/patients/{id}/appointments", patientId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.data.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("Should return 404 when listing appointments for a non-existent patient")
+    void shouldReturnNotFoundWhenListingAppointmentsForUnknownPatient() throws Exception {
+        mockMvc.perform(get("/v1/patients/{id}/appointments", UUID.randomUUID()))
+                .andExpect(status().isNotFound());
+    }
+
+    // ==================== List Appointments (global) Tests ====================
+
+    @Test
+    @DisplayName("Should list appointments globally with patient and doctor populated")
+    void shouldListAppointmentsGloballyOrderedByTime() throws Exception {
+        LocalDateTime later = LocalDateTime.now().plusDays(14);
+        LocalDateTime earlier = LocalDateTime.now().plusDays(7);
+
+        mockMvc.perform(post("/v1/appointments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new BookAppointmentRequest(patientId, doctorId, later))))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/v1/appointments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new BookAppointmentRequest(patientId, doctorId, earlier))))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/v1/appointments"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("Appointments retrieved successfully."))
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].appointmentTime").exists())
+                .andExpect(jsonPath("$.data[0].patient.id").value(patientId.toString()))
+                .andExpect(jsonPath("$.data[0].doctor.id").value(doctorId.toString()))
+                .andExpect(jsonPath("$.data[1].patient.id").value(patientId.toString()));
+    }
+
+    @Test
+    @DisplayName("Should return empty list when no appointments exist globally")
+    void shouldReturnEmptyListWhenNoAppointmentsGlobally() throws Exception {
+        mockMvc.perform(get("/v1/appointments"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("Should filter global list by repeated status query params")
+    void shouldFilterGlobalAppointmentsByStatus() throws Exception {
+        LocalDateTime t1 = LocalDateTime.now().plusDays(5);
+        LocalDateTime t2 = LocalDateTime.now().plusDays(6);
+
+        mockMvc.perform(post("/v1/appointments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new BookAppointmentRequest(patientId, doctorId, t1))))
+                .andExpect(status().isCreated());
+
+        String response = mockMvc.perform(post("/v1/appointments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new BookAppointmentRequest(patientId, doctorId, t2))))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        String secondId = objectMapper.readTree(response).get("data").get("id").asString();
+        mockMvc.perform(post("/v1/appointments/{id}/cancel", secondId)).andExpect(status().isOk());
+
+        mockMvc.perform(get("/v1/appointments").param("status", "SCHEDULED"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].status").value("SCHEDULED"));
+
+        mockMvc.perform(get("/v1/appointments").param("status", "SCHEDULED").param("status", "CANCELLED"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(2));
+    }
+
+    @Test
+    @DisplayName("Should return 400 when from instant is after to instant")
+    void shouldReturnBadRequestWhenFromAfterTo() throws Exception {
+        mockMvc.perform(get("/v1/appointments")
+                        .param("from", "2026-06-01T12:00:00Z")
+                        .param("to", "2026-06-01T08:00:00Z"))
+                .andExpect(status().isBadRequest());
     }
 }

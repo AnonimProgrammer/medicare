@@ -1,6 +1,5 @@
 package com.ironhack.domain;
 
-import java.util.List;
 import java.util.UUID;
 
 import jakarta.persistence.*;
@@ -27,7 +26,4 @@ public class DoctorEntity {
 
     @Enumerated(EnumType.STRING)
     private Specialty specialty;
-
-    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AppointmentEntity> appointments;
 }

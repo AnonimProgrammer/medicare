@@ -1,0 +1,11 @@
+meta {
+  name: List Appointments
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/v1/appointments?status=SCHEDULED
+  body: none
+  auth: none
+}
