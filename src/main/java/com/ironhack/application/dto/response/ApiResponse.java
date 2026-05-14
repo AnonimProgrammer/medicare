@@ -1,6 +1,6 @@
 package com.ironhack.application.dto.response;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
@@ -16,14 +16,14 @@ public class ApiResponse<T> {
     private String message;
     private T data;
     private String errorCode;
-    private Instant timestamp;
+    private OffsetDateTime timestamp;
 
     public static <T> ApiResponse<T> success(T data, String message) {
         return ApiResponse.<T>builder()
                 .status(200)
                 .message(message)
                 .data(data)
-                .timestamp(Instant.now())
+                .timestamp(OffsetDateTime.now())
                 .build();
     }
 
@@ -32,7 +32,7 @@ public class ApiResponse<T> {
                 .status(201)
                 .message(message)
                 .data(data)
-                .timestamp(Instant.now())
+                .timestamp(OffsetDateTime.now())
                 .build();
     }
 
@@ -46,7 +46,7 @@ public class ApiResponse<T> {
                 .message(message)
                 .errorCode(errorCode)
                 .data(data)
-                .timestamp(Instant.now())
+                .timestamp(OffsetDateTime.now())
                 .build();
     }
 }

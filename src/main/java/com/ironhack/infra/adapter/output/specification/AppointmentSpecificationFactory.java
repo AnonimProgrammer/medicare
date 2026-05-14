@@ -1,6 +1,6 @@
 package com.ironhack.infra.adapter.output.specification;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,20 +39,19 @@ public class AppointmentSpecificationFactory {
             }
 
             if (criteria.date() != null) {
-                LocalDateTime dayStart = criteria.date().atStartOfDay();
-                LocalDateTime dayEndExclusive = criteria.date().plusDays(1).atStartOfDay();
+                OffsetDateTime dayStart = criteria.date().atStartOfDay(ZONE).toOffsetDateTime();
+                OffsetDateTime dayEndExclusive =
+                        criteria.date().plusDays(1).atStartOfDay(ZONE).toOffsetDateTime();
                 predicates.add(cb.greaterThanOrEqualTo(root.get("appointmentTime"), dayStart));
                 predicates.add(cb.lessThan(root.get("appointmentTime"), dayEndExclusive));
             }
 
             if (criteria.from() != null) {
-                LocalDateTime fromLdt = LocalDateTime.ofInstant(criteria.from(), ZONE);
-                predicates.add(cb.greaterThanOrEqualTo(root.get("appointmentTime"), fromLdt));
+                predicates.add(cb.greaterThanOrEqualTo(root.get("appointmentTime"), criteria.from()));
             }
 
             if (criteria.to() != null) {
-                LocalDateTime toLdt = LocalDateTime.ofInstant(criteria.to(), ZONE);
-                predicates.add(cb.lessThanOrEqualTo(root.get("appointmentTime"), toLdt));
+                predicates.add(cb.lessThanOrEqualTo(root.get("appointmentTime"), criteria.to()));
             }
 
             if (predicates.isEmpty()) {

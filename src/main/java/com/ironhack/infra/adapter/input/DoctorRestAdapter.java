@@ -1,7 +1,7 @@
 package com.ironhack.infra.adapter.input;
 
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -64,8 +64,8 @@ public class DoctorRestAdapter {
             @PathVariable UUID id,
             @RequestParam(name = "status", required = false) List<AppointmentStatus> status,
             @RequestParam(required = false) LocalDate date,
-            @RequestParam(required = false) Instant from,
-            @RequestParam(required = false) Instant to) {
+            @RequestParam(required = false) OffsetDateTime from,
+            @RequestParam(required = false) OffsetDateTime to) {
         var criteria = new AppointmentQueryCriteria(status, date, from, to);
         ApiResponse<List<DoctorAppointmentDTO>> body = listDoctorAppointmentsUseCase.invoke(id, criteria);
         return ResponseEntity.ok(body);

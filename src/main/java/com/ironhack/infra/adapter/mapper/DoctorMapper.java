@@ -16,5 +16,7 @@ public interface DoctorMapper {
     List<DoctorDTO> toDoctorDTOList(List<DoctorEntity> doctorEntities);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     DoctorEntity toDoctorEntity(CreateDoctorRequest createDoctorRequest);
 }

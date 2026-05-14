@@ -236,10 +236,7 @@ MapStruct and Lombok annotation processing are enabled in `pom.xml`. Unmapped ta
 
 ## Possible next steps
 
-- REST controllers and `@ControllerAdvice` for consistent error bodies
-- Map domain exceptions to `ApiResponse` error shapes
 - Pagination metadata on list endpoints
-- Auditing fields (`createdAt`, `updatedAt`) on entities and DTOs where needed
 - Read-side caching where response shapes are stable
 
-For domain rules and flows, see [System flow](foundation-flow.md).
+For domain rules and flows, see [System flow](system-flow.md).

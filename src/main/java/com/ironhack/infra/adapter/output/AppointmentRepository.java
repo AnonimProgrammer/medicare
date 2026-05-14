@@ -1,6 +1,6 @@
 package com.ironhack.infra.adapter.output;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,7 +17,7 @@ import com.ironhack.domain.AppointmentStatus;
 public interface AppointmentRepository
         extends JpaRepository<AppointmentEntity, UUID>, JpaSpecificationExecutor<AppointmentEntity> {
     boolean existsByDoctor_IdAndAppointmentTimeAndStatus(
-            UUID doctorId, LocalDateTime appointmentTime, AppointmentStatus status);
+            UUID doctorId, OffsetDateTime appointmentTime, AppointmentStatus status);
 
     @Modifying
     void deleteByPatient_Id(UUID patientId);
