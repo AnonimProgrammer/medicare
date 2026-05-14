@@ -21,7 +21,6 @@ import com.ironhack.application.dto.request.BookAppointmentRequest;
 import com.ironhack.application.dto.response.ApiResponse;
 import com.ironhack.application.usecase.appointment.BookAppointmentUseCase;
 import com.ironhack.application.usecase.appointment.CancelAppointmentUseCase;
-import com.ironhack.application.usecase.appointment.CompleteAppointmentUseCase;
 import com.ironhack.application.usecase.appointment.SearchAppointmentsUseCase;
 import com.ironhack.domain.AppointmentStatus;
 import jakarta.validation.Valid;
@@ -33,7 +32,6 @@ import lombok.RequiredArgsConstructor;
 public class AppointmentRestAdapter {
     private final BookAppointmentUseCase bookAppointmentUseCase;
     private final CancelAppointmentUseCase cancelAppointmentUseCase;
-    private final CompleteAppointmentUseCase completeAppointmentUseCase;
     private final SearchAppointmentsUseCase searchAppointmentsUseCase;
 
     @GetMapping
@@ -57,12 +55,6 @@ public class AppointmentRestAdapter {
     @PostMapping("/{id}/cancel")
     public ResponseEntity<ApiResponse<AppointmentDTO>> cancelAppointment(@PathVariable UUID id) {
         ApiResponse<AppointmentDTO> body = cancelAppointmentUseCase.invoke(id);
-        return ResponseEntity.ok(body);
-    }
-
-    @PostMapping("/{id}/complete")
-    public ResponseEntity<ApiResponse<AppointmentDTO>> completeAppointment(@PathVariable UUID id) {
-        ApiResponse<AppointmentDTO> body = completeAppointmentUseCase.invoke(id);
         return ResponseEntity.ok(body);
     }
 }
