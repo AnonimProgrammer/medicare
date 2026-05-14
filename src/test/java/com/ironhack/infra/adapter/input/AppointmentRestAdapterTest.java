@@ -86,6 +86,24 @@ class AppointmentRestAdapterTest {
     }
 
     @Test
+    @DisplayName("Should book appointment when appointment time is local ISO-8601 without offset")
+    void shouldBookAppointmentWithLocalIsoDateTime() throws Exception {
+        String body = """
+                {
+                  "patientId": "%s",
+                  "doctorId": "%s",
+                  "appointmentTime": "2099-01-15T14:30"
+                }
+                """.formatted(patientId, doctorId);
+
+        mockMvc.perform(post("/v1/appointments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.status").value("SCHEDULED"));
+    }
+
+    @Test
     @DisplayName("Should return 400 when booking appointment with past time")
     void shouldReturnBadRequestWhenAppointmentTimeInPast() throws Exception {
         OffsetDateTime pastTime = OffsetDateTime.now().minusDays(1);
