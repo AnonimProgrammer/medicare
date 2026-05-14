@@ -12,6 +12,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.ironhack.application.dto.request.BookAppointmentRequest;
 import com.ironhack.application.dto.request.CreateDoctorRequest;
+import com.ironhack.domain.AppointmentEntity;
+import com.ironhack.domain.AppointmentStatus;
 import com.ironhack.domain.DoctorEntity;
 import com.ironhack.domain.PatientEntity;
 import com.ironhack.domain.Specialty;
@@ -23,6 +25,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -172,5 +176,52 @@ class DoctorRestAdapterTest {
     @DisplayName("Should return 404 when listing appointments for a non-existent doctor")
     void shouldReturnNotFoundWhenListingAppointmentsForUnknownDoctor() throws Exception {
         mockMvc.perform(get("/v1/doctors/{id}/appointments", UUID.randomUUID())).andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Should delete doctor when they have no appointments")
+    void shouldDeleteDoctorWhenNoAppointments() throws Exception {
+        DoctorEntity doctor = doctorRepository.save(DoctorEntity.builder()
+                .fullName("Dr. To Remove")
+                .specialty(Specialty.DENTIST)
+                .build());
+
+        mockMvc.perform(delete("/v1/doctors/{id}", doctor.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Doctor deleted successfully."));
+
+        mockMvc.perform(get("/v1/doctors/{id}/appointments", doctor.getId())).andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Should return 404 when deleting non-existent doctor")
+    void shouldReturnNotFoundWhenDeletingUnknownDoctor() throws Exception {
+        mockMvc.perform(delete("/v1/doctors/{id}", UUID.randomUUID())).andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Should delete doctor and remove all their appointments")
+    void shouldDeleteDoctorAndCascadeAppointments() throws Exception {
+        DoctorEntity doctor = doctorRepository.save(DoctorEntity.builder()
+                .fullName("Dr. Busy")
+                .specialty(Specialty.CARDIOLOGY)
+                .build());
+        PatientEntity patient = patientRepository.save(PatientEntity.builder()
+                .fullName("Pat")
+                .phoneNumber("+10000000003")
+                .build());
+        appointmentRepository.save(AppointmentEntity.builder()
+                .patient(patient)
+                .doctor(doctor)
+                .appointmentTime(LocalDateTime.now().plusDays(2))
+                .status(AppointmentStatus.COMPLETED)
+                .build());
+
+        mockMvc.perform(delete("/v1/doctors/{id}", doctor.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Doctor deleted successfully."));
+
+        assertFalse(doctorRepository.existsById(doctor.getId()));
+        assertEquals(0, appointmentRepository.count());
     }
 }

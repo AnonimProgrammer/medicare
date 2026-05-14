@@ -404,6 +404,54 @@
   </div>
 </div>
 
+<!-- Complete Confirm -->
+<div class="modal-overlay" id="modal-complete-confirm">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3>Complete appointment?</h3>
+      <button class="modal-close" data-modal="modal-complete-confirm">✕</button>
+    </div>
+    <p class="modal-body-text">This marks the visit as completed. You cannot cancel it afterwards from this screen.</p>
+    <input type="hidden" id="complete-appointment-id" />
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" data-modal="modal-complete-confirm">Not yet</button>
+      <button type="button" class="btn btn-primary" id="confirm-complete-btn">Mark completed</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Patient Confirm -->
+<div class="modal-overlay" id="modal-delete-patient-confirm">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3>Delete patient?</h3>
+      <button class="modal-close" data-modal="modal-delete-patient-confirm">✕</button>
+    </div>
+    <p class="modal-body-text">You are about to remove <strong id="delete-patient-display-name">—</strong> from MediCare. <strong>All appointments linked to this patient will be permanently deleted.</strong> This cannot be undone.</p>
+    <input type="hidden" id="delete-patient-id" />
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" data-modal="modal-delete-patient-confirm">Keep patient</button>
+      <button type="button" class="btn btn-danger" id="confirm-delete-patient-btn">Delete patient &amp; appointments</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Doctor Confirm -->
+<div class="modal-overlay" id="modal-delete-doctor-confirm">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3>Delete doctor?</h3>
+      <button class="modal-close" data-modal="modal-delete-doctor-confirm">✕</button>
+    </div>
+    <p class="modal-body-text">You are about to remove <strong id="delete-doctor-display-name">—</strong> from MediCare. <strong>All appointments linked to this doctor will be permanently deleted.</strong> This cannot be undone.</p>
+    <input type="hidden" id="delete-doctor-id" />
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" data-modal="modal-delete-doctor-confirm">Keep doctor</button>
+      <button type="button" class="btn btn-danger" id="confirm-delete-doctor-btn">Delete doctor &amp; appointments</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════ TOAST ═══════════ -->
 <div class="toast-container" id="toast-container"></div>
 

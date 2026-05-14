@@ -112,7 +112,13 @@ flowchart TD
     D --> G[200 OK]
 ```
 
-### 3.3 List Appointments by Date / Doctor Schedule
+### 3.3 Complete an Appointment
+
+- **Endpoint:** `POST /v1/appointments/{id}/complete`
+- Only appointments in **`SCHEDULED`** may be completed; response is **409 Conflict** if the appointment is already **CANCELLED** or **COMPLETED**.
+- On success the status becomes **`COMPLETED`** (**terminal**).
+
+### 3.4 List Appointments by Date / Doctor Schedule
 
 - **By date** — query all appointments where `appointmentTime` falls within the given calendar day (in the JVM default time zone).
 - **Doctor schedule** — query all appointments for a given `doctorId`, optionally filtered by date range, ordered by `appointmentTime`.
@@ -130,9 +136,18 @@ flowchart TD
 
 `from` must not be after `to` when both are present (otherwise the API returns **400 Bad Request**).
 
-### 3.4 View Patient Appointments
+### 3.5 View Patient Appointments
 
-Query all appointments for a given `patientId`, ordered by `appointmentTime` ascending (upcoming first). The same optional query parameters as in §3.3 apply on `GET /v1/patients/{id}/appointments`.
+Query all appointments for a given `patientId`, ordered by `appointmentTime` ascending (upcoming first). The same optional query parameters as in §3.4 apply on `GET /v1/patients/{id}/appointments`.
+
+### 3.6 Delete Patient or Doctor
+
+| Method | Path | Success | Missing entity |
+|--------|------|---------|----------------|
+| `DELETE` | `/v1/patients/{id}` | **200 OK** with envelope message `Patient deleted successfully.` | **404** `Patient not found.` |
+| `DELETE` | `/v1/doctors/{id}` | **200 OK** with envelope message `Doctor deleted successfully.` | **404** `Doctor not found.` |
+
+**Related appointments (product rule):** deleting a patient or doctor performs a **hard delete** of that entity and **cascade-deletes every appointment** that referenced them (all statuses). The API does not orphan appointment rows.
 
 ---
 
@@ -144,9 +159,10 @@ These are invariants the service layer must enforce. They are independent of the
 |---|------|----------------|
 | 1 | A doctor cannot have **overlapping appointments** | `AppointmentService.book(...)` |
 | 2 | An appointment time **cannot be in the past** | `AppointmentService.book(...)` |
-| 3 | A **cancelled appointment cannot be completed** | `AppointmentService.complete(...)` |
+| 3 | A **cancelled appointment cannot be completed** | `CompleteAppointmentUseCase` |
 | 4 | A **cancelled or completed appointment cannot be cancelled again** | `AppointmentService.cancel(...)` |
 | 5 | A doctor must have a **specialty** assigned | `DoctorService.create(...)` |
+| 6 | Deleting a **patient** or **doctor** **cascade-deletes** all appointments that reference them | `DeletePatientUseCase`, `DeleteDoctorUseCase` |
 
 > Rule #1 currently treats "overlap" as **same `appointmentTime` for the same doctor**. If appointment durations are introduced later, this rule should evolve into a real time-range overlap check.
 
