@@ -1,0 +1,66 @@
+name: MediCare CD
+
+on:
+  workflow_run:
+    workflows: ["MediCare CI"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Trigger Render deploy
+        run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+
+      - name: Wait for deployment and verify health
+        env:
+          APP_URL: ${{ secrets.RENDER_APP_URL }}
+        run: |
+          set -u
+          if [ -z "${APP_URL:-}" ]; then
+            echo "::error::Set repository secret RENDER_APP_URL to your service URL (e.g. https://your-app.onrender.com)"
+            exit 1
+          fi
+
+          BASE="${APP_URL%/}"
+          HEALTH_URL="${BASE}/actuator/health"
+
+          echo "Waiting 90s for Render to rebuild and restart..."
+          sleep 90
+
+          MAX_ATTEMPTS=24
+          SLEEP_SECS=15
+
+          for i in $(seq 1 "$MAX_ATTEMPTS"); do
+            echo "Health check attempt ${i}/${MAX_ATTEMPTS} → ${HEALTH_URL}"
+
+            if response=$(curl -fsS --max-time 30 "$HEALTH_URL" 2>/dev/null); then
+              if echo "$response" | jq -e '.status == "UP"' >/dev/null 2>&1; then
+                echo "Health check passed: status is UP"
+                echo "$response" | jq .
+                exit 0
+              fi
+              echo "Unexpected payload (expected status UP):"
+              echo "$response" | head -c 500
+              echo
+            else
+              echo "curl failed (service not ready or HTTP error)"
+            fi
+
+            if [ "$i" -lt "$MAX_ATTEMPTS" ]; then
+              sleep "$SLEEP_SECS"
+            fi
+          done
+
+          echo "::error::Health check did not return {\"status\":\"UP\"} after ${MAX_ATTEMPTS} attempts"
+          exit 1
+
+      - name: Deployment summary
+        if: success()
+        run: |
+          echo "## Deployment verified" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Render deploy hook ran and **actuator/health** reported **UP**." >> "$GITHUB_STEP_SUMMARY"
