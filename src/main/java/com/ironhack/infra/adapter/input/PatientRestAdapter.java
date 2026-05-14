@@ -22,6 +22,7 @@ import com.ironhack.application.dto.request.CreatePatientRequest;
 import com.ironhack.application.dto.response.ApiResponse;
 import com.ironhack.application.usecase.appointment.ListPatientAppointmentsUseCase;
 import com.ironhack.application.usecase.patient.CreatePatientUseCase;
+import com.ironhack.application.usecase.patient.ListPatientsUseCase;
 import com.ironhack.domain.AppointmentStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,13 @@ import lombok.RequiredArgsConstructor;
 public class PatientRestAdapter {
     private final CreatePatientUseCase createPatientUseCase;
     private final ListPatientAppointmentsUseCase listPatientAppointmentsUseCase;
+    private final ListPatientsUseCase listPatientsUseCase;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<PatientDTO>>> listPatients() {
+        ApiResponse<List<PatientDTO>> body = listPatientsUseCase.invoke();
+        return ResponseEntity.ok(body);
+    }
 
     @PostMapping
     public ResponseEntity<ApiResponse<PatientDTO>> createPatient(@Valid @RequestBody CreatePatientRequest request) {
