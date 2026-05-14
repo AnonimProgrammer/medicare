@@ -18,15 +18,15 @@ Simple web client: [MediCare UI](https://medicare-z79v.onrender.com)
 
 ### Architecture
 
-- [System flow](docs/foundation-flow.md) — domain model, core flows, and simple business rules.
+- [System flow](docs/system-flow.md) — domain model, core flows, and simple business rules.
 - [DTOs and MapStruct mappers](docs/dtos-and-mappers.md) — request/read DTOs, mappers, facade, and build notes.
 
 ### API documentation
 
-**Official reference (not tied to your laptop)** — Start with [system flow](docs/foundation-flow.md): domain model, HTTP behaviour, status codes, and business rules. That document is the main human-readable contract for the API.
+- **Official reference** — [System flow](docs/system-flow.md) is the main human-readable contract: domain model, HTTP behaviour, status codes, and business rules. It is not tied to a particular environment.
 
-**OpenAPI (machine-readable, generated)** — The running service exposes OpenAPI 3 JSON at `/v3/api-docs` (see `springdoc.api-docs.path` in `application.properties`). For the deployed API, use `https://medicare-z79v.onrender.com/v3/api-docs`. For a server you start on your machine, use `http://localhost:8080/v3/api-docs`.
+- **OpenAPI** — The running app serves generated OpenAPI 3 JSON at `/v3/api-docs` (see `springdoc.api-docs.path` in `application.properties`). Use [Deployed OpenAPI](https://medicare-z79v.onrender.com/v3/api-docs) for production, or [Local OpenAPI](http://localhost:8080/v3/api-docs) when the app runs on your machine.
 
-**Interactive Swagger UI** — Same paths as above, with `/swagger-ui.html` (see `springdoc.swagger-ui.path`). Production: `https://medicare-z79v.onrender.com/swagger-ui.html`. **Local development only:** `http://localhost:8080/swagger-ui.html` when you are running the app locally; it is not the canonical place to read “official” docs, only a convenient explorer.
+- **Interactive Swagger UI** — Explorer at `/swagger-ui.html` (see `springdoc.swagger-ui.path` in `application.properties`). Use [Deployed Swagger UI](https://medicare-z79v.onrender.com/swagger-ui.html) in production, or [Local Swagger UI](http://localhost:8080/swagger-ui.html) for a quick local try-out (not a substitute for the official reference).
 
-- [Bruno collection](bruno/) — runnable HTTP requests for the REST API, grouped by resource. Open the `bruno` folder in [Bruno](https://www.usebruno.com/), then pick an environment: **local** (`environments/local.bru`, `http://localhost:8080`) or **prod** (`environments/prod.bru`, `https://medicare-z79v.onrender.com`, same host as [MediCare UI](#live-deployment)).
+- **Bruno collection** — The [Bruno](https://www.usebruno.com/) collection lives under [bruno/](bruno/): runnable requests grouped by resource. Pick an environment in Bruno: **local** uses [local.bru](bruno/environments/local.bru) with base URL [Local API](http://localhost:8080); **prod** uses [prod.bru](bruno/environments/prod.bru) with base URL [Deployed API](https://medicare-z79v.onrender.com) (same host as [MediCare UI](#live-deployment)).

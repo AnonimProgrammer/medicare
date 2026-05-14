@@ -1,21 +1,18 @@
 package com.ironhack.application.dto;
 
-import java.util.UUID;
-
 import com.ironhack.domain.Specialty;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class DoctorDTO {
-    private UUID id;
+@SuperBuilder
+public class DoctorDTO extends BaseDto {
     private String fullName;
     private Specialty specialty;
 }

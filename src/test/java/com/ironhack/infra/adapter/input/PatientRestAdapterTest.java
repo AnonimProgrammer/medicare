@@ -1,6 +1,6 @@
 package com.ironhack.infra.adapter.input;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,7 +117,7 @@ public class PatientRestAdapterTest {
                 .specialty(Specialty.CARDIOLOGY)
                 .build());
 
-        LocalDateTime appointmentTime = LocalDateTime.now().plusDays(5);
+        OffsetDateTime appointmentTime = OffsetDateTime.now().plusDays(5);
 
         mockMvc.perform(post("/v1/appointments")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -189,7 +189,7 @@ public class PatientRestAdapterTest {
         appointmentRepository.save(AppointmentEntity.builder()
                 .patient(patient)
                 .doctor(doctor)
-                .appointmentTime(LocalDateTime.now().plusDays(1))
+                .appointmentTime(OffsetDateTime.now().plusDays(1))
                 .status(AppointmentStatus.CANCELLED)
                 .build());
 

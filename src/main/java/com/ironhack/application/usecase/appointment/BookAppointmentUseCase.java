@@ -1,7 +1,7 @@
 package com.ironhack.application.usecase.appointment;
 
 import java.time.Clock;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -51,8 +51,8 @@ public class BookAppointmentUseCase {
         return ApiResponse.created(dto, "Appointment booked successfully.");
     }
 
-    private void ensureAppointmentTimeInFuture(LocalDateTime appointmentTime) {
-        if (appointmentTime.isBefore(LocalDateTime.now(clock))) {
+    private void ensureAppointmentTimeInFuture(OffsetDateTime appointmentTime) {
+        if (appointmentTime.isBefore(OffsetDateTime.now(clock))) {
             throw new IllegalArgumentException("Appointment time must not be in the past.");
         }
     }
@@ -70,7 +70,7 @@ public class BookAppointmentUseCase {
         return doctor;
     }
 
-    private void ensureDoctorHasNoSchedulingConflict(UUID doctorId, LocalDateTime appointmentTime) {
+    private void ensureDoctorHasNoSchedulingConflict(UUID doctorId, OffsetDateTime appointmentTime) {
         if (appointmentRepository.existsByDoctor_IdAndAppointmentTimeAndStatus(
                 doctorId, appointmentTime, AppointmentStatus.SCHEDULED)) {
             throw new ConflictException("The doctor already has a scheduled appointment at this time.");

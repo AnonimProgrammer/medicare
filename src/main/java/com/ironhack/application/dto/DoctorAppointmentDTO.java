@@ -1,23 +1,21 @@
 package com.ironhack.application.dto;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+import java.time.OffsetDateTime;
 
 import com.ironhack.domain.AppointmentStatus;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class DoctorAppointmentDTO {
-    private UUID id;
-    private LocalDateTime appointmentTime;
+@SuperBuilder
+public class DoctorAppointmentDTO extends BaseDto {
+    private OffsetDateTime appointmentTime;
     private AppointmentStatus status;
     private PatientDTO patient;
 }

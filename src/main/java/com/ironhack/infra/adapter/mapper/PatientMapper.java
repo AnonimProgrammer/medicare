@@ -16,5 +16,7 @@ public interface PatientMapper {
     List<PatientDTO> toPatientDTOList(List<PatientEntity> patientEntities);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     PatientEntity toPatientEntity(CreatePatientRequest createPatientRequest);
 }

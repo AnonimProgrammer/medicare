@@ -1,6 +1,6 @@
 package com.ironhack.infra.adapter.input;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,7 +73,7 @@ class AppointmentRestAdapterTest {
     @Test
     @DisplayName("Should successfully book appointment with valid data")
     void shouldBookAppointmentSuccessfully() throws Exception {
-        LocalDateTime futureTime = LocalDateTime.now().plusDays(7);
+        OffsetDateTime futureTime = OffsetDateTime.now().plusDays(7);
         BookAppointmentRequest request = new BookAppointmentRequest(patientId, doctorId, futureTime);
 
         mockMvc.perform(post("/v1/appointments")
@@ -88,7 +88,7 @@ class AppointmentRestAdapterTest {
     @Test
     @DisplayName("Should return 400 when booking appointment with past time")
     void shouldReturnBadRequestWhenAppointmentTimeInPast() throws Exception {
-        LocalDateTime pastTime = LocalDateTime.now().minusDays(1);
+        OffsetDateTime pastTime = OffsetDateTime.now().minusDays(1);
         BookAppointmentRequest request = new BookAppointmentRequest(patientId, doctorId, pastTime);
 
         mockMvc.perform(post("/v1/appointments")
@@ -100,7 +100,7 @@ class AppointmentRestAdapterTest {
     @Test
     @DisplayName("Should return 404 when patient does not exist")
     void shouldReturnNotFoundWhenPatientDoesNotExist() throws Exception {
-        LocalDateTime futureTime = LocalDateTime.now().plusDays(7);
+        OffsetDateTime futureTime = OffsetDateTime.now().plusDays(7);
         BookAppointmentRequest request = new BookAppointmentRequest(UUID.randomUUID(), doctorId, futureTime);
 
         mockMvc.perform(post("/v1/appointments")
@@ -112,7 +112,7 @@ class AppointmentRestAdapterTest {
     @Test
     @DisplayName("Should return 404 when doctor does not exist")
     void shouldReturnNotFoundWhenDoctorDoesNotExist() throws Exception {
-        LocalDateTime futureTime = LocalDateTime.now().plusDays(7);
+        OffsetDateTime futureTime = OffsetDateTime.now().plusDays(7);
         BookAppointmentRequest request = new BookAppointmentRequest(patientId, UUID.randomUUID(), futureTime);
 
         mockMvc.perform(post("/v1/appointments")
@@ -126,7 +126,7 @@ class AppointmentRestAdapterTest {
     @Test
     @DisplayName("Should successfully cancel scheduled appointment")
     void shouldCancelAppointmentSuccessfully() throws Exception {
-        LocalDateTime futureTime = LocalDateTime.now().plusDays(7);
+        OffsetDateTime futureTime = OffsetDateTime.now().plusDays(7);
         BookAppointmentRequest bookRequest = new BookAppointmentRequest(patientId, doctorId, futureTime);
 
         // First, book an appointment
@@ -159,7 +159,7 @@ class AppointmentRestAdapterTest {
     @Test
     @DisplayName("Should return 409 when trying to cancel already cancelled appointment")
     void shouldReturnConflictWhenAppointmentAlreadyCancelled() throws Exception {
-        LocalDateTime futureTime = LocalDateTime.now().plusDays(7);
+        OffsetDateTime futureTime = OffsetDateTime.now().plusDays(7);
         BookAppointmentRequest bookRequest = new BookAppointmentRequest(patientId, doctorId, futureTime);
 
         // Book an appointment
@@ -184,7 +184,7 @@ class AppointmentRestAdapterTest {
     @Test
     @DisplayName("Should complete a scheduled appointment")
     void shouldCompleteScheduledAppointment() throws Exception {
-        LocalDateTime futureTime = LocalDateTime.now().plusDays(7);
+        OffsetDateTime futureTime = OffsetDateTime.now().plusDays(7);
         BookAppointmentRequest bookRequest = new BookAppointmentRequest(patientId, doctorId, futureTime);
 
         String response = mockMvc.perform(post("/v1/appointments")
@@ -215,7 +215,7 @@ class AppointmentRestAdapterTest {
     @Test
     @DisplayName("Should return 409 when trying to complete already completed appointment")
     void shouldReturnConflictWhenCompletingAlreadyCompletedAppointment() throws Exception {
-        LocalDateTime futureTime = LocalDateTime.now().plusDays(7);
+        OffsetDateTime futureTime = OffsetDateTime.now().plusDays(7);
         BookAppointmentRequest bookRequest = new BookAppointmentRequest(patientId, doctorId, futureTime);
 
         String response = mockMvc.perform(post("/v1/appointments")
@@ -239,8 +239,8 @@ class AppointmentRestAdapterTest {
     @Test
     @DisplayName("Should return patient appointments ordered by time, without nested patient field")
     void shouldListPatientAppointmentsOrderedByTime() throws Exception {
-        LocalDateTime later = LocalDateTime.now().plusDays(14);
-        LocalDateTime earlier = LocalDateTime.now().plusDays(7);
+        OffsetDateTime later = OffsetDateTime.now().plusDays(14);
+        OffsetDateTime earlier = OffsetDateTime.now().plusDays(7);
 
         mockMvc.perform(post("/v1/appointments")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -286,8 +286,8 @@ class AppointmentRestAdapterTest {
     @Test
     @DisplayName("Should list appointments globally with patient and doctor populated")
     void shouldListAppointmentsGloballyOrderedByTime() throws Exception {
-        LocalDateTime later = LocalDateTime.now().plusDays(14);
-        LocalDateTime earlier = LocalDateTime.now().plusDays(7);
+        OffsetDateTime later = OffsetDateTime.now().plusDays(14);
+        OffsetDateTime earlier = OffsetDateTime.now().plusDays(7);
 
         mockMvc.perform(post("/v1/appointments")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -323,8 +323,8 @@ class AppointmentRestAdapterTest {
     @Test
     @DisplayName("Should filter global list by repeated status query params")
     void shouldFilterGlobalAppointmentsByStatus() throws Exception {
-        LocalDateTime t1 = LocalDateTime.now().plusDays(5);
-        LocalDateTime t2 = LocalDateTime.now().plusDays(6);
+        OffsetDateTime t1 = OffsetDateTime.now().plusDays(5);
+        OffsetDateTime t2 = OffsetDateTime.now().plusDays(6);
 
         mockMvc.perform(post("/v1/appointments")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -353,7 +353,7 @@ class AppointmentRestAdapterTest {
     }
 
     @Test
-    @DisplayName("Should return 400 when from instant is after to instant")
+    @DisplayName("Should return 400 when from is after to")
     void shouldReturnBadRequestWhenFromAfterTo() throws Exception {
         mockMvc.perform(get("/v1/appointments")
                         .param("from", "2026-06-01T12:00:00Z")
