@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,6 +23,7 @@ import com.ironhack.application.dto.request.CreatePatientRequest;
 import com.ironhack.application.dto.response.ApiResponse;
 import com.ironhack.application.usecase.appointment.ListPatientAppointmentsUseCase;
 import com.ironhack.application.usecase.patient.CreatePatientUseCase;
+import com.ironhack.application.usecase.patient.DeletePatientUseCase;
 import com.ironhack.application.usecase.patient.ListPatientsUseCase;
 import com.ironhack.domain.AppointmentStatus;
 import jakarta.validation.Valid;
@@ -32,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PatientRestAdapter {
     private final CreatePatientUseCase createPatientUseCase;
+    private final DeletePatientUseCase deletePatientUseCase;
     private final ListPatientAppointmentsUseCase listPatientAppointmentsUseCase;
     private final ListPatientsUseCase listPatientsUseCase;
 
@@ -45,6 +48,12 @@ public class PatientRestAdapter {
     public ResponseEntity<ApiResponse<PatientDTO>> createPatient(@Valid @RequestBody CreatePatientRequest request) {
         ApiResponse<PatientDTO> body = createPatientUseCase.invoke(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deletePatient(@PathVariable UUID id) {
+        ApiResponse<Void> body = deletePatientUseCase.invoke(id);
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping("/{id}/appointments")

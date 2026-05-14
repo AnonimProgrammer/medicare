@@ -1,11 +1,11 @@
 meta {
-  name: Cancel Appointment
+  name: Complete Appointment
   type: http
-  seq: 3
+  seq: 4
 }
 
 post {
-  url: {{base_url}}/v1/appointments/{{id}}/cancel
+  url: {{base_url}}/v1/appointments/{{id}}/complete
   body: none
   auth: none
 }

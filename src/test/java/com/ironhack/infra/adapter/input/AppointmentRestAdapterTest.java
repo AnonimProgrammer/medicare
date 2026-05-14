@@ -181,6 +181,59 @@ class AppointmentRestAdapterTest {
         mockMvc.perform(post("/v1/appointments/{id}/cancel", appointmentId)).andExpect(status().isConflict());
     }
 
+    @Test
+    @DisplayName("Should complete a scheduled appointment")
+    void shouldCompleteScheduledAppointment() throws Exception {
+        LocalDateTime futureTime = LocalDateTime.now().plusDays(7);
+        BookAppointmentRequest bookRequest = new BookAppointmentRequest(patientId, doctorId, futureTime);
+
+        String response = mockMvc.perform(post("/v1/appointments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bookRequest)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        String appointmentId =
+                objectMapper.readTree(response).get("data").get("id").asString();
+
+        mockMvc.perform(post("/v1/appointments/{id}/complete", appointmentId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("Appointment completed successfully."))
+                .andExpect(jsonPath("$.data.status").value("COMPLETED"));
+    }
+
+    @Test
+    @DisplayName("Should return 404 when trying to complete non-existent appointment")
+    void shouldReturnNotFoundWhenCompletingNonExistentAppointment() throws Exception {
+        mockMvc.perform(post("/v1/appointments/{id}/complete", UUID.randomUUID()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Should return 409 when trying to complete already completed appointment")
+    void shouldReturnConflictWhenCompletingAlreadyCompletedAppointment() throws Exception {
+        LocalDateTime futureTime = LocalDateTime.now().plusDays(7);
+        BookAppointmentRequest bookRequest = new BookAppointmentRequest(patientId, doctorId, futureTime);
+
+        String response = mockMvc.perform(post("/v1/appointments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bookRequest)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        String appointmentId =
+                objectMapper.readTree(response).get("data").get("id").asString();
+
+        mockMvc.perform(post("/v1/appointments/{id}/complete", appointmentId)).andExpect(status().isOk());
+
+        mockMvc.perform(post("/v1/appointments/{id}/complete", appointmentId)).andExpect(status().isConflict());
+    }
+
     // ==================== List Patient Appointments Tests ====================
 
     @Test

@@ -21,6 +21,7 @@ async function api(method, path, body) {
 const GET  = (p)      => api('GET',   p);
 const POST = (p, b)   => api('POST',  p, b);
 const PATCH= (p, b)   => api('PATCH', p, b);
+const DEL  = (p)      => api('DELETE', p);
 
 /* ═══ Toast ═══ */
 function toast(type, title, msg) {
@@ -182,6 +183,7 @@ function renderDoctors(filter='') {
       <div class="doctor-actions">
         <button class="btn btn-secondary btn-sm" onclick="showDoctorApts('${d.id}','${d.fullName}')">📅 Schedule</button>
         <button class="btn btn-ghost btn-sm" onclick="openAssignSpecialty('${d.id}','${d.fullName}','${sp||''}')">✏️ Specialty</button>
+        <button class="btn btn-danger btn-sm" onclick="promptDeleteDoctor('${d.id}')">🗑 Delete</button>
       </div>
     </div>`;
   }).join('');
@@ -246,7 +248,7 @@ async function showDoctorApts(id, name) {
   try {
     const list = await GET(`/v1/doctors/${id}/appointments`);
     if (!list.length) { body.innerHTML = emptyState('No appointments'); return; }
-    body.innerHTML = aptTable(list, ['patient','time','status','cancel']);
+    body.innerHTML = aptTable(list, ['patient','time','status','actions']);
   } catch(err) { body.innerHTML = `<p style="padding:20px;color:var(--accent-red)">${err.message}</p>`; }
 }
 
@@ -273,6 +275,7 @@ function renderPatients(filter='') {
     <td class="cell-id">${p.id}</td>
     <td class="cell-actions">
       <button class="btn btn-secondary btn-sm" onclick="showPatientApts('${p.id}','${p.fullName}')">📅 History</button>
+      <button class="btn btn-danger btn-sm" onclick="promptDeletePatient('${p.id}')">🗑 Delete</button>
     </td>
   </tr>`).join('');
 }
@@ -312,7 +315,7 @@ async function showPatientApts(id, name) {
   try {
     const list = await GET(`/v1/patients/${id}/appointments`);
     if (!list.length) { body.innerHTML = emptyState('No appointments'); return; }
-    body.innerHTML = aptTable(list, ['doctor','time','status','cancel']);
+    body.innerHTML = aptTable(list, ['doctor','time','status','actions']);
   } catch(err) { body.innerHTML = `<p style="padding:20px;color:var(--accent-red)">${err.message}</p>`; }
 }
 
@@ -331,7 +334,7 @@ function renderAppointments() {
     <td><div style="font-size:.82rem">${fmtDt(a.appointmentTime)}</div></td>
     <td><span class="status-badge status-${a.status}">${a.status}</span></td>
     <td class="cell-actions">
-      ${a.status==='SCHEDULED' ? `<button class="btn btn-danger btn-sm" onclick="promptCancel('${a.id}')">✕ Cancel</button>` : ''}
+      ${a.status==='SCHEDULED' ? `<button class="btn btn-secondary btn-sm" onclick="promptComplete('${a.id}')">✓ Complete</button> <button class="btn btn-danger btn-sm" onclick="promptCancel('${a.id}')">✕ Cancel</button>` : ''}
     </td>
   </tr>`).join('');
 }
@@ -414,13 +417,81 @@ document.getElementById('confirm-cancel-btn').addEventListener('click', async ()
     await POST(`/v1/appointments/${id}/cancel`);
     toast('success','Cancelled','Appointment cancelled');
     closeModal('modal-cancel-confirm');
-    await loadAllAppointments();
-    renderAppointments();
-    renderDashboardAppointments();
-    renderSpecialtyChart();
-    loadDashboard();
+    await refreshAfterAppointmentChange();
   } catch(err) { toast('error','Failed', err.message); }
 });
+
+function promptComplete(id) {
+  document.getElementById('complete-appointment-id').value = id;
+  openModal('modal-complete-confirm');
+}
+
+document.getElementById('confirm-complete-btn').addEventListener('click', async () => {
+  const id = document.getElementById('complete-appointment-id').value;
+  try {
+    await POST(`/v1/appointments/${id}/complete`);
+    toast('success','Completed','Appointment marked as completed');
+    closeModal('modal-complete-confirm');
+    await refreshAfterAppointmentChange();
+  } catch(err) { toast('error','Failed', err.message); }
+});
+
+function promptDeletePatient(id) {
+  const p = patients.find(x => x.id === id);
+  document.getElementById('delete-patient-id').value = id;
+  document.getElementById('delete-patient-display-name').textContent = p?.fullName || id;
+  openModal('modal-delete-patient-confirm');
+}
+
+document.getElementById('confirm-delete-patient-btn').addEventListener('click', async () => {
+  const id = document.getElementById('delete-patient-id').value;
+  try {
+    await DEL(`/v1/patients/${id}`);
+    toast('success','Patient removed','Patient and all of their appointments were deleted.');
+    closeModal('modal-delete-patient-confirm');
+    closeModal('modal-patient-apts');
+    await refreshAfterEntityDelete();
+  } catch(err) { toast('error','Failed', err.message); }
+});
+
+function promptDeleteDoctor(id) {
+  const d = doctors.find(x => x.id === id);
+  document.getElementById('delete-doctor-id').value = id;
+  document.getElementById('delete-doctor-display-name').textContent = d?.fullName || id;
+  openModal('modal-delete-doctor-confirm');
+}
+
+document.getElementById('confirm-delete-doctor-btn').addEventListener('click', async () => {
+  const id = document.getElementById('delete-doctor-id').value;
+  try {
+    await DEL(`/v1/doctors/${id}`);
+    toast('success','Doctor removed','Doctor and all of their appointments were deleted.');
+    closeModal('modal-delete-doctor-confirm');
+    closeModal('modal-doctor-apts');
+    await refreshAfterEntityDelete();
+  } catch(err) { toast('error','Failed', err.message); }
+});
+
+async function refreshAfterAppointmentChange() {
+  await loadAllAppointments();
+  renderAppointments();
+  renderDashboardAppointments();
+  renderSpecialtyChart();
+  await loadDashboard();
+}
+
+async function refreshAfterEntityDelete() {
+  await loadAllAppointments();
+  await loadDoctors();
+  await loadPatients();
+  updateBadges();
+  const active = document.querySelector('.page.active')?.id;
+  if (active === 'page-doctors') renderDoctors(document.getElementById('doctor-search')?.value || '');
+  if (active === 'page-patients') renderPatients(document.getElementById('patient-search')?.value || '');
+  if (active === 'page-appointments') renderAppointments();
+  if (active === 'page-dashboard') await loadDashboard();
+  if (active === 'page-book') populateBookSelects();
+}
 
 /* ═══ Global Search ═══ */
 document.getElementById('global-search').addEventListener('input', e => {
@@ -459,14 +530,18 @@ function emptyState(msg) {
 }
 
 function aptTable(list, cols) {
-  const headers = { patient:'Patient', doctor:'Doctor', time:'Date & Time', status:'Status', cancel:'Action' };
+  const headers = { patient:'Patient', doctor:'Doctor', time:'Date & Time', status:'Status', cancel:'Action', actions:'Actions' };
+  const actionCell = (a) => a.status === 'SCHEDULED'
+    ? `<button class="btn btn-secondary btn-sm" onclick="promptComplete('${a.id}')">✓</button> <button class="btn btn-danger btn-sm" onclick="promptCancel('${a.id}')">✕</button>`
+    : '—';
   return `<table class="data-table"><thead><tr>${cols.map(c=>`<th>${headers[c]||c}</th>`).join('')}</tr></thead>
     <tbody>${list.map(a=>`<tr>
       ${cols.includes('patient') ? `<td class="cell-name">${a.patient?.fullName||a.patientId||'—'}</td>` : ''}
       ${cols.includes('doctor')  ? `<td class="cell-name">${a.doctor?.fullName||a.doctorId||'—'}</td>` : ''}
       ${cols.includes('time')    ? `<td style="font-size:.78rem;color:var(--text-muted)">${fmtDt(a.appointmentTime)}</td>` : ''}
       ${cols.includes('status')  ? `<td><span class="status-badge status-${a.status}">${a.status}</span></td>` : ''}
-      ${cols.includes('cancel')  ? `<td>${a.status==='SCHEDULED'?`<button class="btn btn-danger btn-sm" onclick="promptCancel('${a.id}')">✕</button>`:'—'}</td>` : ''}
+      ${cols.includes('actions') ? `<td>${actionCell(a)}</td>` : ''}
+      ${cols.includes('cancel') && !cols.includes('actions') ? `<td>${a.status==='SCHEDULED'?`<button class="btn btn-danger btn-sm" onclick="promptCancel('${a.id}')">✕</button>`:'—'}</td>` : ''}
     </tr>`).join('')}</tbody></table>`;
 }
 

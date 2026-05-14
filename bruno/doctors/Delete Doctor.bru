@@ -1,11 +1,11 @@
 meta {
-  name: List Doctor Appointments
+  name: Delete Doctor
   type: http
-  seq: 4
+  seq: 5
 }
 
-get {
-  url: {{base_url}}/v1/doctors/{{id}}/appointments
+delete {
+  url: {{base_url}}/v1/doctors/{{id}}
   body: none
   auth: none
 }

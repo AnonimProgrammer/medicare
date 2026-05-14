@@ -21,6 +21,7 @@ public class ListDoctorsUseCase {
     public ApiResponse<List<DoctorDTO>> invoke() {
         var entities = doctorRepository.findAll();
         var dtos = mappingFacade.toDoctorDTOList(entities);
+
         return ApiResponse.success(dtos, "Doctors retrieved successfully.");
     }
 }
