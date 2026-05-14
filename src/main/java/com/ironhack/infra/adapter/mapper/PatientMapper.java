@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 @Mapper(config = MapStructConfig.class)
 public interface PatientMapper {
     PatientDTO toPatientDTO(PatientEntity patientEntity);
+    java.util.List<PatientDTO> toPatientDTOList(java.util.List<PatientEntity> patientEntities);
 
     @Mapping(target = "id", ignore = true)
     PatientEntity toPatientEntity(CreatePatientRequest createPatientRequest);

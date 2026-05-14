@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 @Mapper(config = MapStructConfig.class)
 public interface DoctorMapper {
     DoctorDTO toDoctorDTO(DoctorEntity doctorEntity);
+    java.util.List<DoctorDTO> toDoctorDTOList(java.util.List<DoctorEntity> doctorEntities);
 
     @Mapping(target = "id", ignore = true)
     DoctorEntity toDoctorEntity(CreateDoctorRequest createDoctorRequest);

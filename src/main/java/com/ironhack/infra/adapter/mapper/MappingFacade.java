@@ -43,6 +43,14 @@ public class MappingFacade {
         return appointmentMapper.toAppointmentDTO(entity);
     }
 
+    public List<DoctorDTO> toDoctorDTOList(List<DoctorEntity> entities) {
+        return doctorMapper.toDoctorDTOList(entities);
+    }
+
+    public List<PatientDTO> toPatientDTOList(List<PatientEntity> entities) {
+        return patientMapper.toPatientDTOList(entities);
+    }
+
     public List<AppointmentDTO> toAppointmentDTOList(List<AppointmentEntity> entities) {
         return appointmentMapper.toAppointmentDTOList(entities);
     }

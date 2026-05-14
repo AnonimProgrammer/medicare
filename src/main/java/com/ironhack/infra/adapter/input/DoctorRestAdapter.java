@@ -18,6 +18,7 @@ import com.ironhack.application.dto.response.ApiResponse;
 import com.ironhack.application.usecase.appointment.ListDoctorAppointmentsUseCase;
 import com.ironhack.application.usecase.doctor.AssignSpecialtyToDoctorUseCase;
 import com.ironhack.application.usecase.doctor.CreateDoctorUseCase;
+import com.ironhack.application.usecase.doctor.ListDoctorsUseCase;
 import com.ironhack.domain.AppointmentStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,13 @@ public class DoctorRestAdapter {
     private final CreateDoctorUseCase createDoctorUseCase;
     private final AssignSpecialtyToDoctorUseCase assignSpecialtyToDoctorUseCase;
     private final ListDoctorAppointmentsUseCase listDoctorAppointmentsUseCase;
+    private final ListDoctorsUseCase listDoctorsUseCase;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<DoctorDTO>>> listDoctors() {
+        ApiResponse<List<DoctorDTO>> body = listDoctorsUseCase.invoke();
+        return ResponseEntity.ok(body);
+    }
 
     @PostMapping
     public ResponseEntity<ApiResponse<DoctorDTO>> createDoctor(@Valid @RequestBody CreateDoctorRequest request) {
