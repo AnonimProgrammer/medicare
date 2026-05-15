@@ -10,6 +10,10 @@ Continuous deployment runs from the [`deploy.yml`](https://github.com/AnonimProg
 
 Simple web client: [MediCare UI](https://medicare-z79v.onrender.com)
 
+## Project tracking
+
+- [Jira (MED)](https://anonimprogrammer.atlassian.net/jira/software/projects/MED/list) — backlog and issues for this project.
+
 ## Documentation Guide
 
 ### Project Setup
